@@ -25,13 +25,19 @@ class MM:
         self.streak_count = [0 for _ in range(3)]
 
     def p(self, streak):
-        return self.streak_count[streak] / sum(self.streak_count)
+        return float(self.streak_count[streak]) / sum(self.streak_count)
 
     def p_play_with(self, streak0, streak1):
-        return self.teammates[streak0 * 3 + streak1] / sum(self.teammates[streak0:streak0 + 3])
+        s = sum(self.teammates[streak0:streak0 + 3])
+        if s:
+            return float(self.teammates[streak0 * 3 + streak1]) / s
+        return 0
 
-    def p_play_against(self, streak0, streak1):
-        return self.opponents[streak0 * 3 + streak1] / sum(self.opponents[streak0:streak0 + 3])
+    def p_play_against(self, streak0, streak1):  # changed
+        s = sum(self.opponents[streak0:streak0 + 3])
+        if s:
+            return float(self.opponents[streak0 * 3 + streak1]) / s
+        return 0
 
     def main(self):
         with open('challenger_names.txt', 'rb') as file:
@@ -44,8 +50,10 @@ class MM:
                 current_name = matches[0]['participantIdentities'][part]['player']['summonerName']
                 if current_name == current_player:
                     p_team = int(matches[0]['participants'][part]['stats']['win'])
+                    print('Owner in team ' + str(p_team))
                     oc1 = get_outcome(current_player, matches[1])
                     oc2 = get_outcome(current_player, matches[2])
+                    print(oc1, oc2)
                     if oc1 and oc2:
                         current_streak = 0
                     elif oc1 or oc2:
@@ -54,6 +62,7 @@ class MM:
                         current_streak = 2
                 else:
                     sorted_players[int(matches[0]['participants'][part]['stats']['win'])].append(current_name)
+            print(sorted_players)
             for tm in sorted_players[p_team]:
                 tm_streak = getStreak(tm, game_id)
                 if tm_streak != -1:
@@ -130,22 +139,26 @@ def original_load_matches(name, n):
 
 
 def load_matches(name, n):
-    return mocked_matches[mocked_names[name]:n]
+    return mocked_matches[mocked_names[name]][:n]  # changed
 
 
 def getStreak(name, match_id):
     nload = 10
     matches = load_matches(name, nload)
+    print("Reference is " + str(match_id))
     for g in range(nload - 2):
+        print("Current match_id is " + str(matches[g]['gameId']))
         if matches[g]['gameId'] == match_id:
             oc1 = get_outcome(name, matches[g + 1])
             oc2 = get_outcome(name, matches[g + 2])
             if oc1 and oc2:
                 return 0
             elif oc1 or oc2:
+                print("Returning 1 for " + name)
                 return 1
             else:
                 return 2
+    print("Returning -1 for " + name)
     return -1
 
 
@@ -191,5 +204,5 @@ with open('mock.dat', 'rb') as f:
     mocked_matches = pickle.load(f)
 with open('dict.dat', 'rb') as f:
     mocked_names = pickle.load(f)
-
+#
 run()

@@ -28,10 +28,16 @@ class MM:
         return self.streak_count[streak] / sum(self.streak_count)
 
     def p_play_with(self, streak0, streak1):
-        return self.teammates[streak0 * 3 + streak1] / sum(self.teammates[streak0:streak0 + 3])
+        s = sum(self.teammates[streak0:streak0 + 3])
+        if s:
+            return float(self.teammates[streak0 * 3 + streak1]) / s
+        return 0
 
     def p_play_against(self, streak0, streak1):
-        return self.opponents[streak0 * 3 + streak1] / sum(self.opponents[streak0:streak0 + 3])
+        s = sum(self.opponents[streak0:streak0 + 3])
+        if s:
+            return float(self.opponents[streak0 * 3 + streak1]) / s
+        return 0
 
     def main(self):
         with open('challenger_names.txt', 'rb') as file:
@@ -162,6 +168,6 @@ def run():
         pickle.dump(db, file)
 
 
-# preload and make test run
-
+create_db_file()
+get_names(5)
 run()
