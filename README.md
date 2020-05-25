@@ -49,7 +49,6 @@ Algorithm based on League of Legends game data to determine whether or not RIOT 
 
 # external functions:
 
-get_players: returns a list of players names (challengers is a nice start)
 get_last_game_id: returns int game_id of last ranked played by a given player
 get_player_streak: use heuristic based on history to return int in [0,2]
 
