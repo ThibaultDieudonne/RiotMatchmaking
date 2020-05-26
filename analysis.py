@@ -1,11 +1,15 @@
 from api_binder import *
-from mock import Mock, make_mock
+from mock import make_mock
 import pickle
 
 
-# todo: Implement function to get streak independant average imbalance
-USEMOCK = True
-REFERENCE_PLAYER = "Pixel Pangolin"
+# todo: Implement function to get streak independant average imbalance, get matchs with same match type
+# todo: consider garbage with None count > X, implement previous game getter with type handling
+# todo: get standard deviation for players' streaks to see if riot fill the whole game with winning/losing players
+
+
+USEMOCK = False
+REFERENCE_PLAYER = "NonoCASTER Hi"
 
 
 class MM:
@@ -26,6 +30,8 @@ class MM:
             team = int(match['participants'][part]['stats']['win'])
             match_players[team].append(curaccid)
             players_streaks[team].append(self.get_streak(curaccid, matchid))
+        print("Current game streaks: ", end="")
+        print(players_streaks)
         # constructing streaks data
         local_streak_count = [0, 0]
         team_streak_count = [0, 0, 0, 0]
@@ -34,14 +40,16 @@ class MM:
             local_streak_count[strk] += players_streaks[0].count(strk) + players_streaks[1].count(strk)
         for tm in range(2):
             for strk in range(2):
-                team_streak_count[tm * 2 + strk] = players_streaks[tm].count(strk)
+                team_streak_count[tm * 2 + strk] = 2 * players_streaks[tm].count(strk)
         # computing game imbalance
         for dat in range(4):
-            local_imbalance += team_streak_count[dat] - local_streak_count[dat % 2]
+            local_imbalance += abs(team_streak_count[dat] - local_streak_count[dat % 2])
         # removing bias
-        local_imbalance -= 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
+        bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
+        local_imbalance -= bias
 
         self.total_imbalance += local_imbalance
+        self.data_count += 1
 
 
     def get_streak(self, accountid, match_id):
@@ -54,21 +62,20 @@ class MM:
                 oc1 = get_outcome(accountid, matches[1])
                 oc2 = get_outcome(accountid, matches[2])
                 if oc1 and oc2:
-                    result = 0
+                    result = 0  # win streak
                 elif oc1 or oc2:
-                    result = 2
+                    result = 2  # neutral
                 else:
-                    result = 1
+                    result = 1  # lose streak
                 self.streak_count[result] += 1
-                self.data_count += 1
                 return result
-        except Exception as e:
-            print(e)
-        return -1
+        except TypeError:
+            # 404 error makes the player neutral but neutral counter is not incremented to keep enbiased data
+            return 2
 
 
     def get_imbalance(self):
-        return round(float(self.total_imbalance) / self.data_count, 1)
+        return self.total_imbalance // self.data_count
 
 
     def get_stats(self):
@@ -76,6 +83,7 @@ class MM:
         print("Total win streak players: " + str(self.streak_count[0]))
         print("Total lose streak players: " + str(self.streak_count[1]))
         print("Total neutral players: " + str(self.streak_count[2]))
+        print("Games in db: " + str(self.data_count))
 
 
 def create_db_file():
@@ -93,6 +101,8 @@ def run(playername):
         create_db_file()
         with open('db.dat', 'rb') as file:
             db = pickle.load(file)
+
+    print("Getting API data")
 
     if USEMOCK:
         match = mock.main_game

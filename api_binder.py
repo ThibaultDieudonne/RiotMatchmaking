@@ -2,7 +2,7 @@ from pantheon import pantheon
 import asyncio
 
 
-LOGS = True
+LOGS = False
 server = "euw1"
 api_key = "RGAPI-2ca4b71c-de28-489c-af4b-fc45f6cb9ace"
 
