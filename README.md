@@ -4,6 +4,9 @@ Algorithm based on League of Legends game data to determine whether or not RIOT 
 
 DuoQ may be a bias.
 
+# todo
+
+Still bugged, need to save to disk while requesting API to make debug reruns
 
 # Code Structure
 

@@ -1,157 +1,80 @@
-from pantheon import pantheon
-import asyncio
-import json
+from api_binder import *
+from mock import Mock, make_mock
 import pickle
 
 
-server = "euw1"
-api_key = "RGAPI-591df5d2-9d77-4d90-a325-4f6958105052"
-
-
-def requestsLog(url, status, headers):
-    print(url)
-    print(status)
-    print(headers)
-
-
-panth = pantheon.Pantheon(server, api_key, errorHandling=True, requestsLoggingFunction=requestsLog, debug=True)
+USEMOCK = True
+REFERENCE_PLAYER = "Pixel Pangolin"
 
 
 class MM:
     def __init__(self):
-        self.streaks = ['win', 'neutral', 'lose']
-        self.teammates = [0 for _ in range(9)]
-        self.opponents = [0 for _ in range(9)]
+        self.streaks = ['win', 'lose', 'neutral']
+        self.data_count = 0
+        self.total_imbalance = 0
         self.streak_count = [0 for _ in range(3)]
 
-    def p(self, streak):
-        return self.streak_count[streak] / sum(self.streak_count)
 
-    def p_play_with(self, streak0, streak1):
-        s = sum(self.teammates[streak0:streak0 + 3])
-        if s:
-            return float(self.teammates[streak0 * 3 + streak1]) / s
-        return 0
+    def main(self, match):
+        matchid = match['gameId']
+        # getting player's teams and current streak status before game
+        match_players = [[], []]
+        players_streaks = [[], []]
+        for part in range(10):
+            curaccid = match['participantIdentities'][part]['player']['accountId']
+            team = int(match['participants'][part]['stats']['win'])
+            match_players[team].append(curaccid)
+            players_streaks[team].append(self.get_streak(curaccid, matchid))
+        # constructing streaks data
+        local_streak_count = [0, 0]
+        team_streak_count = [0, 0, 0, 0]
+        local_imbalance = 0
+        for strk in range(2):
+            local_streak_count[strk] += players_streaks[0].count(strk) + players_streaks[1].count(strk)
+        for tm in range(2):
+            for strk in range(2):
+                team_streak_count[tm * 2 + strk] = players_streaks[tm].count(strk)
+        # computing game imbalance
+        for dat in range(4):
+            local_imbalance += team_streak_count[dat] - local_streak_count[dat % 2]
+        # removing bias
+        local_imbalance -= 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
 
-    def p_play_against(self, streak0, streak1):
-        s = sum(self.opponents[streak0:streak0 + 3])
-        if s:
-            return float(self.opponents[streak0 * 3 + streak1]) / s
-        return 0
+        self.total_imbalance += local_imbalance
 
-    def main(self):
-        with open('challenger_names.txt', 'rb') as file:
-            players = pickle.load(file)
-        for current_player in players:
-            matches = load_matches(current_player, 3)
-            game_id = matches[0]['gameId']
-            sorted_players = [[], []]  # 0 for losers 1 for winners
-            for part in range(10):
-                current_name = matches[0]['participantIdentities'][part]['player']['summonerName']
-                if current_name == current_player:
-                    p_team = int(matches[0]['participants'][part]['stats']['win'])
-                    oc1 = get_outcome(current_player, matches[1])
-                    oc2 = get_outcome(current_player, matches[2])
-                    if oc1 and oc2:
-                        current_streak = 0
-                    elif oc1 or oc2:
-                        current_streak = 1
-                    else:
-                        current_streak = 2
+
+    def get_streak(self, accountid, match_id):
+        if USEMOCK:
+            matches = mock.players_games[accountid]
+        else:
+            matches = get_matches(accountid, 3)
+        try:
+            if matches[0]['gameId'] == match_id:
+                oc1 = get_outcome(accountid, matches[1])
+                oc2 = get_outcome(accountid, matches[2])
+                if oc1 and oc2:
+                    result = 0
+                elif oc1 or oc2:
+                    result = 2
                 else:
-                    sorted_players[int(matches[0]['participants'][part]['stats']['win'])].append(current_name)
-            for tm in sorted_players[p_team]:
-                tm_streak = getStreak(tm, game_id)
-                if tm_streak != -1:
-                    self.streak_count[tm_streak] += 1
-                    self.teammates[current_streak * 3 + tm_streak] += 1
-            for op in sorted_players[1 - p_team]:
-                op_streak = getStreak(op, game_id)
-                if op_streak != -1:
-                    self.streak_count[op_streak] += 1
-                    self.opponents[current_streak * 3 + op_streak] += 1
-
-        for i, s in enumerate(self.streaks):
-            print("Expected " + s + " streak probability: " + str(100 * self.p(i)) + "%")
-        print('\n')
-        for i, s0 in enumerate(self.streaks):
-            for j, s1 in enumerate(self.streaks):
-                print(s0 + " streak plays with " + s1 + " streak " + str(100 * self.p_play_with(i, j)) + "%")
-                print(s0 + " streak plays against " + s1 + " streak " + str(100 * self.p_play_against(i, j)) + "%\n")
+                    result = 1
+                self.streak_count[result] += 1
+                self.data_count += 1
+                return result
+        except Exception as e:
+            print(e)
+        return -1
 
 
-async def getSummonerId(mname):
-    try:
-        data = await panth.getSummonerByName(mname)
-        return data['id'], data['accountId']
-    except Exception as e:
-        print(e)
+    def get_imbalance(self):
+        return round(float(self.total_imbalance) / self.data_count, 1)
 
 
-async def getRecentMatchlist(maccountId, n):
-    try:
-        data = await panth.getMatchlist(maccountId, params={"endIndex": n})
-        return data
-    except Exception as e:
-        print(e)
-
-
-async def getRecentMatches(maccountId, n):
-    try:
-        matchlist = await getRecentMatchlist(maccountId, n)
-        tasks = [panth.getMatch(match['gameId']) for match in matchlist['matches']]
-        return await asyncio.gather(*tasks)
-    except Exception as e:
-        print(e)
-
-
-async def getChallengerNames():
-    try:
-        data = await panth.getChallengerLeague()
-        return data
-    except Exception as e:
-        print(e)
-
-
-def get_names(limit=-1):
-    print('Getting challenger names')
-    chall_names = []
-    loop = asyncio.get_event_loop()
-    data = loop.run_until_complete(getChallengerNames())
-    for i, chall in enumerate(data['entries']):
-        if i == limit:
-            break
-        chall_names.append(chall['summonerName'])
-    with open('challenger_names.txt', 'wb') as file:
-        pickle.dump(chall_names, file)
-
-
-def load_matches(name, n):
-    loop = asyncio.get_event_loop()
-    (summonerId, accountId) = loop.run_until_complete(getSummonerId(name))
-    return loop.run_until_complete(getRecentMatches(accountId, n))
-
-
-def getStreak(name, match_id):
-    nload = 10
-    matches = load_matches(name, nload)
-    for g in range(nload - 2):
-        if matches[g]['gameId'] == match_id:
-            oc1 = get_outcome(name, matches[g + 1])
-            oc2 = get_outcome(name, matches[g + 2])
-            if oc1 and oc2:
-                return 0
-            elif oc1 or oc2:
-                return 1
-            else:
-                return 2
-    return -1
-
-
-def get_outcome(name, game):
-    for part in range(10):
-        if game['participantIdentities'][part]['player']['summonerName'] == name:
-            return game['participants'][part]['stats']['win']
+    def get_stats(self):
+        print("Average imbalance is " + str(self.get_imbalance()))
+        print("Total win streak players: " + str(self.streak_count[0]))
+        print("Total lose streak players: " + str(self.streak_count[1]))
+        print("Total neutral players: " + str(self.streak_count[2]))
 
 
 def create_db_file():
@@ -160,14 +83,36 @@ def create_db_file():
         pickle.dump(save, file)
 
 
-def run():
-    with open('db.dat', 'rb') as file:
-        db = pickle.load(file)
-    db.main()
+def run(playername):
+    try:
+        with open('db.dat', 'rb') as file:
+            db = pickle.load(file)
+    except IOError:
+        print("db file missing, creating it")
+        create_db_file()
+        with open('db.dat', 'rb') as file:
+            db = pickle.load(file)
+
+    if USEMOCK:
+        match = mock.main_game
+    else:
+        match = get_recent_match(playername)
+
+    db.main(match)
+    db.get_stats()
+
     with open('db.dat', 'wb') as file:
         pickle.dump(db, file)
 
 
-create_db_file()
-get_names(5)
-run()
+if USEMOCK:
+    try:
+        with open('mock.dat', 'rb') as f:
+            mock = pickle.load(f)
+    except IOError:
+        print("no mock file, creating it")
+        make_mock(REFERENCE_PLAYER)
+        with open('mock.dat', 'rb') as f:
+            mock = pickle.load(f)
+
+run(REFERENCE_PLAYER)
