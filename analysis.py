@@ -3,6 +3,7 @@ from mock import Mock, make_mock
 import pickle
 
 
+# todo: Implement function to get streak independant average imbalance
 USEMOCK = True
 REFERENCE_PLAYER = "Pixel Pangolin"
 
