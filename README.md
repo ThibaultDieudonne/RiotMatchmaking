@@ -2,15 +2,20 @@
 
 # Abstract
 
-It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Complaining players are convinced matchmaking algorithm controls players streaks to maximize their play time.
+It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Part of complaining players are convinced matchmaking algorithm unbalances games on purpose, in order to maximize their play time.
+
+It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous games results. Modern learning algorithms would definitely be able to find such tendancies. Since players' playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors makes players' money spending grow). So why not ?
+
+From an entertaining view, it would be pretty bad for the game if the games quality and/or the team compositions were purposely unbalanced.
+
 This program goal is to get a statistical certainty on this question, by analysing game data to determine whether or not the algorithm is streak dependant (as games MMR are obviously not imbalanced).
 We will study both game composition (standard deviation for average amount of win/lose streak players per game) and teams composition (average team imbalance).
 
 # Process
 
-We define streaks as follow: if last two games were wins/loses, the player is considered win/lose streaking, otherwise he's neutral.
+We define streaks as follow: if last two games were wins/loses, the player is considered win/lose streaking, otherwise he's neutral (a missing data for a player will make him neutral since it doesn't bias our results, but if a game lacks more than 2 players' data, it is just skipped).
 
-Note this metric is unbiased: if matchmaking algorithm is considering streaks over a bigger game history, we would necessarily see some repercussions by only observing last two games.
+Note this whole metric is unbiased: if matchmaking algorithm is considering streaks over a bigger game history, we may necessarily see some repercussions by only observing last two games. If matchmaking algorithm was considering other parameters than streaks it may also have repercussions on it. 
 
 As we observe a game we get every player's current streak. Then we compute a "riot_imbalance" value, proportionnal to team imbalance from a streak perspective.
 
@@ -31,9 +36,15 @@ To be published.
 
 To see database statistics run "stats.py".
 
-To fill the database or create a fresh one, you will need pantheon (install with "pip install pantheon"). Then run "analysis.py" by setting REFERENCE_PLAYER to any player who ended a ranked in the current hour. You also need to fill your own Riot API key into "api_binder.py".
+To fill the database or create a fresh one (by deleting db.dat file), you will need pantheon (install with "pip install pantheon").
 
-The program will update the database with 50 recent games at each run (this can take a huge while). This limitation is dued to riot API not making it easy to look for game histories before a particular game (in case it is not recent).
+Then you need to fill your own Riot API key into "api_binder.py".
+
+Finally run "analysis.py".
+
+The program will update the database with ITERATIONS games' data at each run. The very low speed issue is dued to riot API not making it easy to look for game histories before a particular game, and high limitation of requests per minute.
+
+When creating a fresh database it is strongly recommended to update INITIAL_GAME_ID in "analysis.py" with the "Last game id" value shown by stats.py (updated each time database is filled).
 
 # todo
 
