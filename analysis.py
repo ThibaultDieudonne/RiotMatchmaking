@@ -8,7 +8,7 @@ import pickle
 
 
 USEMOCK = False
-REFERENCE_PLAYER = "OneTabz"
+REFERENCE_PLAYER = "Teddy Ruineur"
 
 
 class MM:
@@ -33,7 +33,8 @@ class MM:
             players_streaks[team].append(self.get_streak(curaccid, matchid))
         nonecount = players_streaks[0].count(3) + players_streaks[1].count(3)
         if nonecount > 2:
-            print("Too many missing data")
+            print("Too many missing data: ", end="")
+            print(players_streaks)
             return None
         print("Current game streaks: ", end="")
         print(players_streaks)
@@ -63,12 +64,14 @@ class MM:
 
     @staticmethod
     def get_streak(accountid, match_id):
+        global replace_index
         if USEMOCK:
             matches = mock.players_games[accountid]
         else:
             matches = get_matches(accountid, 3)
         if matches is not None:
-            if matches[0]['gameId'] == match_id:
+            curmatchid = matches[0]['gameId']
+            if curmatchid == match_id:
                 oc1 = get_outcome(accountid, matches[1])
                 oc2 = get_outcome(accountid, matches[2])
                 if oc1 and oc2:
@@ -79,6 +82,8 @@ class MM:
                     result = 1  # lose streak
                 return result
             else:
+                if curmatchid > replace_index:
+                    replace_index = curmatchid
                 return 3
         else:
             return 3
@@ -102,6 +107,7 @@ def create_db_file():
 
 
 def run(playername, iterations=1):
+    global replace_index
     try:
         with open('db.dat', 'rb') as file:
             db = pickle.load(file)
@@ -127,7 +133,10 @@ def run(playername, iterations=1):
             while res is None:
                 queueid = 0
                 while queueid != 420:  # blaze it rito
-                    matchid -= 1
+                    if matchid < replace_index:
+                        matchid = replace_index
+                    else:
+                        matchid += 1
                     match = get_match(matchid)
                     if match != -1:
                         queueid = match["queueId"]
@@ -150,4 +159,5 @@ if USEMOCK:
         with open('mock.dat', 'rb') as f:
             mock = pickle.load(f)
 
+replace_index = 0
 run(REFERENCE_PLAYER, 50)

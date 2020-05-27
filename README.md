@@ -4,7 +4,7 @@
 
 It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Complaining players are convinced matchmaking algorithm controls players streaks to maximize their play time.
 This program goal is to get a statistical certainty on this question, by analysing game data to determine whether or not the algorithm is streak dependant (as games MMR are obviously not imbalanced).
-We will both study game composition (standard deviation for average amount of win/lose streak players per game) and teams composition (average team imbalance).
+We will study both game composition (standard deviation for average amount of win/lose streak players per game) and teams composition (average team imbalance).
 
 # Process
 
@@ -16,7 +16,7 @@ As we observe a game we get every player's current streak. Then we compute a "ri
 
 We can compare riot_imbalance average for a large game sample with the same "imbalance" concept applied to a streak-independant team making algorithm respecting the amount of win streaks, lose streaks and neutrals players. In pratice we just create a large amount of "fake lobbies" by sampling players' streaks with probabilities from the real sample.
 
-If riot_imbalance is much greater than streak independant then Riot is definitely rigging team making to control player's streaks.
+If riot_imbalance is much greater than streak independant imbalance then Riot is definitely rigging team making to control player's streaks.
 If the values are close Riot team making might not be rigged.
 If riot_imbalance is much lower, it means that Riot team making is streak dependant, but it tends to balance winning/losing players over teams.
 
@@ -31,7 +31,7 @@ To be published.
 
 To see database statistics run "stats.py".
 
-To fill the database or create a fresh one, you will need pantheon (install with "pip install pantheon"). Then run "analysis.py" by setting REFERENCE_PLAYER to any player who ended a ranked in the current hour. You also need to fill "api_binder.py" with your own Riot API key.
+To fill the database or create a fresh one, you will need pantheon (install with "pip install pantheon"). Then run "analysis.py" by setting REFERENCE_PLAYER to any player who ended a ranked in the current hour. You also need to fill your own Riot API key into "api_binder.py".
 
 The program will update the database with 50 recent games at each run (this can take a huge while). This limitation is dued to riot API not making it easy to look for game histories before a particular game (in case it is not recent).
 

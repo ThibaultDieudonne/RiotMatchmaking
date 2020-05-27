@@ -30,7 +30,7 @@ async def getRecentMatchlist(maccountId, n):
         data = await panth.getMatchlist(maccountId, params={"queueId": 420, "endIndex": n})
         return data
     except Exception as e:
-        pass
+        print(e)
 
 
 async def getRecentMatches(maccountId, n):
