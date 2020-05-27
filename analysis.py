@@ -6,8 +6,7 @@ import pickle
 # todo: Implement function to get streak independant average imbalance
 #  and standard deviation for average amount of win/lose streak players per game
 
-
-ITERATIONS = 10
+ITERATIONS = 2
 INITIAL_GAME_ID = 4625931783
 USEMOCK = False  # Don't touch
 
@@ -28,14 +27,18 @@ class MM:
         match_players = [[], []]
         players_streaks = [[], []]
         print(f"Getting players' current streaks")
+        nonecount = 0
         for part in range(10):
             curaccid = match['participantIdentities'][part]['player']['accountId']
             team = int(match['participants'][part]['stats']['win'])
             match_players[team].append(curaccid)
-            players_streaks[team].append(self.get_streak(curaccid, matchid))
-        nonecount = players_streaks[0].count(3) + players_streaks[1].count(3)
-        if nonecount > 2:
-            return None
+            curstreak = self.get_streak(curaccid, matchid)
+            if curstreak == 3:
+                nonecount += 1
+                if nonecount > 2:
+                    print("Skipping this game (lack of data)")
+                    return None
+            players_streaks[team].append(curstreak)
         # constructing streaks data
         local_streak_count = [0, 0]
         team_streak_count = [0, 0, 0, 0]
@@ -88,11 +91,11 @@ class MM:
 
 
     def get_imbalance(self):
-        return self.total_imbalance // self.data_count
+        return round(float(self.total_imbalance) / self.data_count, 1)
 
 
     def get_stats(self):
-        print("\nAverage imbalance is " + str(self.get_imbalance()))
+        print("\nAverage riot_imbalance is " + str(self.get_imbalance()))
         print("Games in db: " + str(self.data_count))
         print("Last game id: " + str(self.current_game_id))
 
@@ -145,15 +148,16 @@ def run(matchid, iterations=1):
         pickle.dump(db, file)
 
 
-if USEMOCK:
-    try:
-        with open('mock.dat', 'rb') as f:
-            mock = pickle.load(f)
-    except IOError:
-        print("no mock file, creating it")
-        make_mock(INITIAL_GAME_ID)
-        with open('mock.dat', 'rb') as f:
-            mock = pickle.load(f)
+if __name__ == "__main__":
+    if USEMOCK:
+        try:
+            with open('mock.dat', 'rb') as f:
+                mock = pickle.load(f)
+        except IOError:
+            print("no mock file, creating it")
+            make_mock(INITIAL_GAME_ID)
+            with open('mock.dat', 'rb') as f:
+                mock = pickle.load(f)
 
-replace_index = 0
-run(INITIAL_GAME_ID, ITERATIONS)
+    replace_index = 0
+    run(INITIAL_GAME_ID, ITERATIONS)

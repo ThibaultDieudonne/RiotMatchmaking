@@ -4,9 +4,9 @@
 
 It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Part of complaining players are convinced matchmaking algorithm unbalances games on purpose, in order to maximize their play time.
 
-It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous games results. Modern learning algorithms would definitely be able to find such tendancies. Since players' playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors makes players' money spending grow). So why not ?
+It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous games results. Modern learning algorithms would definitely be able to find such tendancies. Moreover, players' playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors makes overall money spending grow). So why not ?
 
-From an entertaining view, it would be pretty bad for the game if the games quality and/or the team compositions were purposely unbalanced.
+From an entertaining view, it would be pretty bad for League of Legends if the games' quality and/or the team compositions were purposely unbalanced.
 
 This program goal is to get a statistical certainty on this question, by analysing game data to determine whether or not the algorithm is streak dependant (as games MMR are obviously not imbalanced).
 We will study both game composition (standard deviation for average amount of win/lose streak players per game) and teams composition (average team imbalance).
@@ -19,14 +19,14 @@ Note this whole metric is unbiased: if matchmaking algorithm is considering stre
 
 As we observe a game we get every player's current streak. Then we compute a "riot_imbalance" value, proportionnal to team imbalance from a streak perspective.
 
-We can compare riot_imbalance average for a large game sample with the same "imbalance" concept applied to a streak-independant team making algorithm respecting the amount of win streaks, lose streaks and neutrals players. In pratice we just create a large amount of "fake lobbies" by sampling players' streaks with probabilities from the real sample.
+We can compare riot_imbalance average for a large game sample with the same "imbalance" concept applied to a streak-independant team making algorithm respecting the amount of win streaks, lose streaks and neutrals players. In pratice we just create a large amount of "fake lobbies" by sampling players' streaks with probabilities from the real games sample.
 
-If riot_imbalance is much greater than streak independant imbalance then Riot is definitely rigging team making to control player's streaks.
-If the values are close Riot team making might not be rigged.
+If riot_imbalance is much greater than streak independant imbalance then Riot is definitely rigging team making to control players' streaks.
+If the values are close, Riot team making might not be rigged.
 If riot_imbalance is much lower, it means that Riot team making is streak dependant, but it tends to balance winning/losing players over teams.
 
 We also compute standard deviation for average amount of win/lose streak players per game, for real games and our fake lobbies.
-Again, if riot's values are higher, then it would be a proof that Riot matchmaking is streak dependant.
+Again, if Riot's values are higher, then it would be a proof that Riot matchmaking is streak dependant.
 
 # Results
 
