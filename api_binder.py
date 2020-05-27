@@ -4,7 +4,7 @@ import asyncio
 
 LOGS = False
 server = "euw1"
-api_key = "RGAPI-2ca4b71c-de28-489c-af4b-fc45f6cb9ace"
+api_key = "RGAPI-40b2254a-682a-44a5-90bc-4fd30e880c23"
 
 
 def requestsLog(url, status, headers):
@@ -39,7 +39,7 @@ async def getRecentMatches(maccountId, n):
         tasks = [panth.getMatch(match['gameId']) for match in matchlist['matches']]
         return await asyncio.gather(*tasks)
     except:
-        print("No recent ranked games registered in API")
+        print("Unable to get a match history from Riot API")
 
 
 def get_matches(accountid, n):
@@ -60,13 +60,3 @@ def get_outcome(accountid, game):
         if game['participantIdentities'][part]['player']['accountId'] == accountid:
             return game['participants'][part]['stats']['win']
 
-
-def get_recent_match(playername):
-    loop = asyncio.get_event_loop()
-    try:
-        (summonerId, accountId) = loop.run_until_complete(getSummonerId(playername))
-        match = loop.run_until_complete(getRecentMatches(accountId, 1))[0]
-        return match
-    except TypeError:
-        print("Can't find " + playername)
-        return -1

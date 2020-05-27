@@ -5,10 +5,11 @@ import pickle
 
 # todo: Implement function to get streak independant average imbalance
 #  and standard deviation for average amount of win/lose streak players per game
+# run with gameid, delete every ununsed stuff
 
 
 USEMOCK = False
-REFERENCE_PLAYER = "Teddy Ruineur"
+INITIAL_GAME_ID = 4625931783
 
 
 class MM:
@@ -25,11 +26,11 @@ class MM:
         # getting player's teams and current streak status before game
         match_players = [[], []]
         players_streaks = [[], []]
+        print(f"Getting players' current streaks")
         for part in range(10):
             curaccid = match['participantIdentities'][part]['player']['accountId']
             team = int(match['participants'][part]['stats']['win'])
             match_players[team].append(curaccid)
-            print(f"Getting player {part + 1} current streak")
             players_streaks[team].append(self.get_streak(curaccid, matchid))
         nonecount = players_streaks[0].count(3) + players_streaks[1].count(3)
         if nonecount > 2:
@@ -71,7 +72,7 @@ class MM:
             matches = get_matches(accountid, 3)
         if matches is not None:
             curmatchid = matches[0]['gameId']
-            if curmatchid == match_id:
+            if curmatchid == match_id and len(matches) > 2:
                 oc1 = get_outcome(accountid, matches[1])
                 oc2 = get_outcome(accountid, matches[2])
                 if oc1 and oc2:
@@ -106,7 +107,7 @@ def create_db_file():
         pickle.dump(save, file)
 
 
-def run(playername, iterations=1):
+def run(matchid, iterations=1):
     global replace_index
     try:
         with open('db.dat', 'rb') as file:
@@ -121,14 +122,10 @@ def run(playername, iterations=1):
 
     if USEMOCK:
         match = mock.main_game
-    else:
-        match = get_recent_match(playername)
-
-    if match != -1:
-        matchid = match['gameId']
-        print("Getting match " + str(matchid))
         db.main(match)
+    else:
         for it in range(iterations):
+            print(f"Done: {it + 1}/{iterations + 1}")
             res = None
             while res is None:
                 queueid = 0
@@ -143,10 +140,10 @@ def run(playername, iterations=1):
 
                 print("Getting match " + str(match['gameId']))
                 res = db.main(match)
-        db.get_stats()
+    db.get_stats()
 
-        with open('db.dat', 'wb') as file:
-            pickle.dump(db, file)
+    with open('db.dat', 'wb') as file:
+        pickle.dump(db, file)
 
 
 if USEMOCK:
@@ -155,9 +152,9 @@ if USEMOCK:
             mock = pickle.load(f)
     except IOError:
         print("no mock file, creating it")
-        make_mock(REFERENCE_PLAYER)
+        make_mock(INITIAL_GAME_ID)
         with open('mock.dat', 'rb') as f:
             mock = pickle.load(f)
 
 replace_index = 0
-run(REFERENCE_PLAYER, 50)
+run(INITIAL_GAME_ID, 200)
