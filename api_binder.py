@@ -22,15 +22,15 @@ async def getSummonerId(mname):
         data = await panth.getSummonerByName(mname)
         return data['id'], data['accountId']
     except Exception as e:
-        print(e)
+        print(str(e) + " in getSummonerId")
 
 
 async def getRecentMatchlist(maccountId, n):
     try:
-        data = await panth.getMatchlist(maccountId, params={"endIndex": n})
+        data = await panth.getMatchlist(maccountId, params={"queueId": 420, "endIndex": n})
         return data
     except Exception as e:
-        print(e)
+        pass
 
 
 async def getRecentMatches(maccountId, n):
@@ -38,8 +38,8 @@ async def getRecentMatches(maccountId, n):
         matchlist = await getRecentMatchlist(maccountId, n)
         tasks = [panth.getMatch(match['gameId']) for match in matchlist['matches']]
         return await asyncio.gather(*tasks)
-    except Exception as e:
-        print(e)
+    except:
+        print("No recent ranked games registered in API")
 
 
 def get_matches(accountid, n):
@@ -48,8 +48,11 @@ def get_matches(accountid, n):
 
 
 def get_match(matchId):
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(getMatch(matchId))
+    try:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(panth.getMatch(matchId))
+    except:
+        return -1
 
 
 def get_outcome(accountid, game):
@@ -60,6 +63,10 @@ def get_outcome(accountid, game):
 
 def get_recent_match(playername):
     loop = asyncio.get_event_loop()
-    (summonerId, accountId) = loop.run_until_complete(getSummonerId(playername))
-    match = loop.run_until_complete(getRecentMatches(accountId, 1))[0]
-    return match
+    try:
+        (summonerId, accountId) = loop.run_until_complete(getSummonerId(playername))
+        match = loop.run_until_complete(getRecentMatches(accountId, 1))[0]
+        return match
+    except TypeError:
+        print("Can't find " + playername)
+        return -1

@@ -3,13 +3,12 @@ from mock import make_mock
 import pickle
 
 
-# todo: Implement function to get streak independant average imbalance, get matchs with same match type
-# todo: consider garbage with None count > X, implement previous game getter with type handling
-# todo: get standard deviation for players' streaks to see if riot fill the whole game with winning/losing players
+# todo: Implement function to get streak independant average imbalance
+#  and standard deviation for average amount of win/lose streak players per game
 
 
 USEMOCK = False
-REFERENCE_PLAYER = "NonoCASTER Hi"
+REFERENCE_PLAYER = "OneTabz"
 
 
 class MM:
@@ -17,7 +16,8 @@ class MM:
         self.streaks = ['win', 'lose', 'neutral']
         self.data_count = 0
         self.total_imbalance = 0
-        self.streak_count = [0 for _ in range(3)]
+        self.nwinstreaks = []
+        self.nlosestreaks = []
 
 
     def main(self, match):
@@ -29,7 +29,12 @@ class MM:
             curaccid = match['participantIdentities'][part]['player']['accountId']
             team = int(match['participants'][part]['stats']['win'])
             match_players[team].append(curaccid)
+            print(f"Getting player {part + 1} current streak")
             players_streaks[team].append(self.get_streak(curaccid, matchid))
+        nonecount = players_streaks[0].count(3) + players_streaks[1].count(3)
+        if nonecount > 2:
+            print("Too many missing data")
+            return None
         print("Current game streaks: ", end="")
         print(players_streaks)
         # constructing streaks data
@@ -47,17 +52,22 @@ class MM:
         # removing bias
         bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
         local_imbalance -= bias
-
+        # updating data
         self.total_imbalance += local_imbalance
         self.data_count += 1
+        self.nwinstreaks.append(players_streaks[0].count(0) + players_streaks[1].count(0))
+        self.nlosestreaks.append(players_streaks[0].count(1) + players_streaks[1].count(1))
+
+        return 1
 
 
-    def get_streak(self, accountid, match_id):
+    @staticmethod
+    def get_streak(accountid, match_id):
         if USEMOCK:
             matches = mock.players_games[accountid]
         else:
             matches = get_matches(accountid, 3)
-        try:
+        if matches is not None:
             if matches[0]['gameId'] == match_id:
                 oc1 = get_outcome(accountid, matches[1])
                 oc2 = get_outcome(accountid, matches[2])
@@ -67,11 +77,11 @@ class MM:
                     result = 2  # neutral
                 else:
                     result = 1  # lose streak
-                self.streak_count[result] += 1
                 return result
-        except TypeError:
-            # 404 error makes the player neutral but neutral counter is not incremented to keep enbiased data
-            return 2
+            else:
+                return 3
+        else:
+            return 3
 
 
     def get_imbalance(self):
@@ -79,11 +89,10 @@ class MM:
 
 
     def get_stats(self):
-        print("Average imbalance is " + str(self.get_imbalance()))
-        print("Total win streak players: " + str(self.streak_count[0]))
-        print("Total lose streak players: " + str(self.streak_count[1]))
-        print("Total neutral players: " + str(self.streak_count[2]))
+        print("\nAverage imbalance is " + str(self.get_imbalance()))
         print("Games in db: " + str(self.data_count))
+        print(self.nwinstreaks)
+        print(self.nlosestreaks)
 
 
 def create_db_file():
@@ -92,7 +101,7 @@ def create_db_file():
         pickle.dump(save, file)
 
 
-def run(playername):
+def run(playername, iterations=1):
     try:
         with open('db.dat', 'rb') as file:
             db = pickle.load(file)
@@ -109,11 +118,26 @@ def run(playername):
     else:
         match = get_recent_match(playername)
 
-    db.main(match)
-    db.get_stats()
+    if match != -1:
+        matchid = match['gameId']
+        print("Getting match " + str(matchid))
+        db.main(match)
+        for it in range(iterations):
+            res = None
+            while res is None:
+                queueid = 0
+                while queueid != 420:  # blaze it rito
+                    matchid -= 1
+                    match = get_match(matchid)
+                    if match != -1:
+                        queueid = match["queueId"]
 
-    with open('db.dat', 'wb') as file:
-        pickle.dump(db, file)
+                print("Getting match " + str(match['gameId']))
+                res = db.main(match)
+        db.get_stats()
+
+        with open('db.dat', 'wb') as file:
+            pickle.dump(db, file)
 
 
 if USEMOCK:
@@ -126,4 +150,4 @@ if USEMOCK:
         with open('mock.dat', 'rb') as f:
             mock = pickle.load(f)
 
-run(REFERENCE_PLAYER)
+run(REFERENCE_PLAYER, 50)

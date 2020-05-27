@@ -15,3 +15,4 @@ def make_mock(playername):
     mock = Mock(playername)
     with open('mock.dat', 'wb') as file:
         pickle.dump(mock, file)
+
