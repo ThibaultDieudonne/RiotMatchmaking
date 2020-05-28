@@ -47,9 +47,6 @@ If riot_balance is close to model_balance: team making is not streak dependant. 
 If riot_balance is much lower than model_balance: team making is streak dependant and balances winning and losing players over teams. Win streak players are more likely to play with lose streak players.
 This is the result complaining players can expect.
 
-We also compute standard deviation for average amount of win/lose streak players per game, for real games and our fake lobbies.
-Again, if Riot's values are higher, then it would be a proof that Riot matchmaking is streak dependant (i.e. players with the same streak are more likely to play in the same games).
-
 # Results
 
 In practice a balanced game returns a value of 0, and a strongly imbalanced game produces a value greater than 4.
