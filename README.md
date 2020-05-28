@@ -33,7 +33,7 @@ We compare riot_balance average for a large game sample with the same "streak ba
 
 It is important to check if the whole games are imbalanced because it would produce biased results for team making analysis.
 
-We expect riot_sd and model_sd values to be close because we wan't think of a capital gain to fill games according to recent games results.
+We expect riot_sd and model_sd values to be close because we can't imagine a capital gain by filling games according to recent games results.
 
 2) Balance values
 
