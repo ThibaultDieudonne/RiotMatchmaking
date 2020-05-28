@@ -27,7 +27,7 @@ We also compute a "riot_balance" value, proportionnal to team balance from a str
 
 We compare riot_balance average for a large game sample with the same "streak balance" concept applied to our model (model_balance).
 
-#Interpretations
+# Interpretations
 
 1) Standard deviations
 
