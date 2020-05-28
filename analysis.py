@@ -6,8 +6,8 @@ import pickle
 # todo: Implement function to get streak independant average imbalance
 #  and standard deviation for average amount of win/lose streak players per game
 
-ITERATIONS = 2
-INITIAL_GAME_ID = 4625931783
+ITERATIONS = 200
+INITIAL_GAME_ID = 4627415281
 USEMOCK = False  # Don't touch
 
 
