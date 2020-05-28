@@ -1,14 +1,14 @@
+import numpy as np
 from api_binder import *
 from mock import make_mock
 import pickle
+import math
 
-
-# todo: Implement function to get streak independant average imbalance
-#  and standard deviation for average amount of win/lose streak players per game
 
 ITERATIONS = 200
 INITIAL_GAME_ID = 4627415281
 USEMOCK = False  # Don't touch
+np.random.seed(0)
 
 
 class MM:
@@ -42,24 +42,26 @@ class MM:
         # constructing streaks data
         local_streak_count = [0, 0]
         team_streak_count = [0, 0, 0, 0]
-        local_imbalance = 0
+        local_balance = 0
         for strk in range(2):
             local_streak_count[strk] += players_streaks[0].count(strk) + players_streaks[1].count(strk)
         for tm in range(2):
             for strk in range(2):
                 team_streak_count[tm * 2 + strk] = 2 * players_streaks[tm].count(strk)
-        # computing game imbalance
+        # computing game balance
         for dat in range(4):
-            local_imbalance += abs(team_streak_count[dat] - local_streak_count[dat % 2])
+            local_balance += abs(team_streak_count[dat] - local_streak_count[dat % 2])
         # removing bias
         bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
-        local_imbalance -= bias
+        local_balance -= bias
         # updating data
-        self.total_imbalance += local_imbalance
+        self.total_imbalance += local_balance
         self.data_count += 1
-        self.nwinstreaks.append(players_streaks[0].count(0) + players_streaks[1].count(0))
-        self.nlosestreaks.append(players_streaks[0].count(1) + players_streaks[1].count(1))
-
+        self.nwinstreaks.append(local_streak_count[0])
+        self.nlosestreaks.append(local_streak_count[1])
+        # writing to disk (as time cost is negligible considering API response time)
+        with open('db.dat', 'wb') as file:
+            pickle.dump(self, file)
         return 1
 
 
@@ -90,14 +92,61 @@ class MM:
             return 3
 
 
-    def get_imbalance(self):
+    def get_balance(self):
         return round(float(self.total_imbalance) / self.data_count, 1)
 
 
     def get_stats(self):
-        print("\nAverage riot_imbalance is " + str(self.get_imbalance()))
+        print("\nAverage riot_balance is " + str(self.get_balance()))
+        print("riot_sd for win streaks is " + str(get_sd(self.nwinstreaks, self.data_count)))
+        print("riot_sd for lose streaks is " + str(get_sd(self.nlosestreaks, self.data_count)))
         print("Games in db: " + str(self.data_count))
         print("Last game id: " + str(self.current_game_id))
+        print("Total win streak players: " + str(sum(self.nwinstreaks)))
+        print("Total lose streak players: " + str(sum(self.nlosestreaks)))
+        print(f"Cumulated riot_balance: {self.total_imbalance}")
+        self.make_simulation()
+
+
+    def make_simulation(self):
+        n_lobbies = 1000
+        print(f"\nCreating {n_lobbies} fake lobbies")
+        total_imbalance = 0
+        nwinstreaks = []
+        nlosestreaks = []
+        divisor = float(10 * self.data_count)
+        total_wins = sum(self.nwinstreaks)
+        total_loses = sum(self.nlosestreaks)
+        params = [total_wins, total_loses, divisor - total_wins - total_loses]
+        for i in range(3):
+            params[i] /= divisor
+        for fake_lobby in range(n_lobbies):
+            # filling lobby with random players and constructing streaks data
+            players_streaks = [[], []]
+            local_streak_count = [0, 0]
+            team_streak_count = [0, 0, 0, 0]
+            for tm in range(2):
+                for part in range(5):
+                    strk = np.random.choice([0, 1, 2], p=params)
+                    players_streaks[tm].append(strk)
+                    if strk < 2:
+                        local_streak_count[strk] += 1
+                        team_streak_count[2 * tm + strk] += 1
+            local_balance = 0
+            # computing game balance
+            for dat in range(4):
+                local_balance += abs(team_streak_count[dat] - local_streak_count[dat % 2])
+            # removing bias
+            bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
+            local_balance -= bias
+            # updating data
+            total_imbalance += local_balance
+            nwinstreaks.append(local_streak_count[0])
+            nlosestreaks.append(local_streak_count[1])
+        # printing results
+        print("Average model_balance is " + str(round(total_imbalance / 1000., 1)))
+        print("riot_sd for win streaks is " + str(get_sd(nwinstreaks, n_lobbies)))
+        print("riot_sd for lose streaks is " + str(get_sd(nlosestreaks, n_lobbies)))
 
 
 def create_db_file():
@@ -106,9 +155,17 @@ def create_db_file():
         pickle.dump(save, file)
 
 
+def get_sd(values, n):
+    res = 0.
+    av = sum(values) / float(n)
+    for r in values:
+        res += (r - av)**2
+    res /= n
+    return round(math.sqrt(res), 1)
+
+
 def run(matchid, iterations=1):
     global replace_index
-
     try:
         with open('db.dat', 'rb') as file:
             db = pickle.load(file)
@@ -137,15 +194,11 @@ def run(matchid, iterations=1):
                     match = get_match(matchid)
                     if match != -1:
                         queueid = match["queueId"]
-
                 print("Getting match " + str(match['gameId']))
                 res = db.main(match)
             print(f"Done: {it + 1}/{iterations}")
             db.current_game_id = matchid
     db.get_stats()
-
-    with open('db.dat', 'wb') as file:
-        pickle.dump(db, file)
 
 
 if __name__ == "__main__":

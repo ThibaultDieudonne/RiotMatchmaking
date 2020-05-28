@@ -10,7 +10,6 @@ def show_stats():
         print("No database file")
         return None
     db.get_stats()
-    print(f"Cumulated riot_imbalance: {db.total_imbalance}")
 
 
 if __name__ == "__main__":
