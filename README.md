@@ -2,11 +2,11 @@
 
 # Abstract
 
-It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Part of complaining players are convinced matchmaking algorithm imbalances games on purpose, in order to maximize their play time.
+It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Part of complaining players are convinced matchmaking algorithm imbalances games on purpose.
 
-It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous results: players losing several games in a row are likely to lower their play time in a near future, while players winning several games in a row are not likely to increase their play time as much. Moreover, playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors make overall money spending grow). So their might be a capital gain trying to avoid long lose streaks.
+It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous results: players losing several games in a row are likely to lower their play time in a near future, while players winning several games in a row are not likely to increase their play time as much. Moreover, playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors make overall money spending grow). So there might be a capital gain trying to avoid long lose streaks.
 
-From an entertaining view, it would be pretty bad for League of Legends if the player realised games quality and/or team compositions were purposely imbalanced. The more players are doing good, the more likely they are to play with players doing bad (with all the tilt issues that comes with).
+From an entertaining view, it would be pretty bad for League of Legends if the player realised games quality and/or team compositions were purposely imbalanced. The more a player is doing good, the more likely he is to play with players doing bad (with all the tilt issues that comes with).
 
 This program goal is to get a statistical certainty on this question, by analysing game data to determine whether or not the algorithm is streak dependant (as games MMR are obviously not imbalanced).
 We will study both game composition (standard deviation for average amount of win/lose streak players per game) and teams composition (average team balance).
@@ -17,9 +17,9 @@ We define streaks as follow: if last two games were wins/loses, the player is co
 
 Note this streak parameter is unbiased: if matchmaking algorithm is considering streaks over a bigger game history, we may necessarily see some repercussions by only observing the last two games. If matchmaking algorithm was considering other parameters, they may have repercussions on winrate, so on streaks (as a player with winrate > 0.5 wins two games in a row with a probability p > 1/4).
 
-However if Riot is using the biggest game history possible (i.e. season winrate) the game sample needed to see repercussions on the last two games may not be computable in a reasonable time (see time restrictions on "# How to run" section).
+However if Riot is using the biggest game history possible (i.e. season winrate) the game sample needed to see repercussions on the last two games may be very long to compute (see time restrictions on "# How to run" section).
 
-We define winrate as a binary parameter representing either a losing player (season winrate < 0.5) or a winning player (season winrate >= 0.5).
+To over come this issue, we could define winrate as a binary parameter representing either a losing player (season winrate < 0.5) or a winning player (season winrate >= 0.5). Note this parameter has not been implemented because of how hard Riot API made it to get player's winrates (only way of doing so is to keep a a local database with every ranked game played this season, or do web scrapping on a similar service). Anyway, the following content describe how we would have managed it.
 
 # Metric description
 
@@ -67,15 +67,15 @@ We run a large number of iterations of our model, proceeding as described in 1).
 
 3) Comparating values
 
-For both our parameters we compute the standard deviation for the B(b) values stored (riot_game_streak_sd, riot_game_winrate_sd, model_game_streak_sd, model_game_winrate_sd).
+For both our parameters we compute the standard deviation for the B(b) values stored.
 
 It is important to check if the whole games are imbalanced because it would produce biased results for team making analysis.
 
 We expect riot_sd and model_sd values to be the same, because separating winning and losing players shouldn't have a strong impact on game result.
 
-Then, we compare standard deviations for m(G) values (riot_team_streak_sd, riot_team_winrate_sd, model_team_streak_sd, model_team_winrate_sd). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average values.
+Then, we compare standard deviations for m(G) values. It is also important, because some games could be rigged in the opposite way as expected to compensate for the average values.
 
-Finally, we compare average values on both samples for our two parameters (riot_streak_balance vs model_streak_balance, and riot_winrate_balance vs model_winrate_balance).
+Finally, we compare average values on both samples for our two parameters.
 
 # Interpretations
 
@@ -93,9 +93,11 @@ This is the result complaining players can expect.
 
 # Results
 
+As mentioned in "# Parameters desciption" section, the results only show streak related values.
+
 In practice a balanced game returns a value of 0, and a strongly imbalanced game produces a value greater than 4.
 
-For the firsts 200 games (relatively small sample, even if it already took more than 6 hours to compute), standards deviations are relatively close (1.6/1.4 for win streaks, 1.5/1.3 for lose streaks).
+For the firsts 200 games (relatively small sample, even if it already took more than 6 hours to compute), standards deviations over games are relatively close (1.6/1.4 for win streaks, 1.5/1.3 for lose streaks).
 Average riot_balance is 2.6 while average model_balance is 2.9. It is likely that Riot matchmaking is streak independant. 
 
 1000 games to be published.

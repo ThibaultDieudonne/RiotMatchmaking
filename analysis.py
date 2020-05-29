@@ -6,16 +6,16 @@ import math
 
 
 ITERATIONS = 200
-INITIAL_GAME_ID = 4627415281
+INITIAL_GAME_ID = 4627415290
 USEMOCK = False  # Don't touch
-np.random.seed(0)
+np.random.seed(0)  # Don't touch
 
 
 class MM:
     def __init__(self):
         self.streaks = ['win', 'lose', 'neutral']
         self.data_count = 0
-        self.total_imbalance = 0
+        self.total_imbalance = []
         self.nwinstreaks = []
         self.nlosestreaks = []
         self.current_game_id = INITIAL_GAME_ID
@@ -49,13 +49,10 @@ class MM:
             for strk in range(2):
                 team_streak_count[tm * 2 + strk] = 2 * players_streaks[tm].count(strk)
         # computing game balance
-        for dat in range(4):
-            local_balance += abs(team_streak_count[dat] - local_streak_count[dat % 2])
-        # removing bias
-        bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
-        local_balance -= bias
+        for dat in range(2):
+            local_balance += abs(2 * team_streak_count[dat] - local_streak_count[dat]) - local_streak_count[dat] % 2
         # updating data
-        self.total_imbalance += local_balance
+        self.total_imbalance += [local_balance]
         self.data_count += 1
         self.nwinstreaks.append(local_streak_count[0])
         self.nlosestreaks.append(local_streak_count[1])
@@ -92,26 +89,21 @@ class MM:
             return 3
 
 
-    def get_balance(self):
-        return round(float(self.total_imbalance) / self.data_count, 1)
-
-
     def get_stats(self):
-        print("\nAverage riot_balance is " + str(self.get_balance()))
-        print("riot_sd for win streaks is " + str(get_sd(self.nwinstreaks, self.data_count)))
-        print("riot_sd for lose streaks is " + str(get_sd(self.nlosestreaks, self.data_count)))
-        print("Games in db: " + str(self.data_count))
+        print("\nGames in db: " + str(self.data_count))
         print("Last game id: " + str(self.current_game_id))
-        print("Total win streak players: " + str(sum(self.nwinstreaks)))
-        print("Total lose streak players: " + str(sum(self.nlosestreaks)))
-        print(f"Cumulated riot_balance: {self.total_imbalance}")
+
+        print("\nAverage Riot balance is " + str(round(sum(self.total_imbalance) / 1000., 1)))
+        print("Riot SD for balance is " + str(get_sd(self.total_imbalance)))
+        print("Riot SD for win streaks is " + str(get_sd(self.nwinstreaks)))
+        print("Riot SD for lose streaks is " + str(get_sd(self.nlosestreaks)))
+
         self.make_simulation()
 
 
     def make_simulation(self):
         n_lobbies = 1000
-        print(f"\nCreating {n_lobbies} fake lobbies")
-        total_imbalance = 0
+        total_imbalance = []
         nwinstreaks = []
         nlosestreaks = []
         divisor = float(10 * self.data_count)
@@ -140,13 +132,14 @@ class MM:
             bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
             local_balance -= bias
             # updating data
-            total_imbalance += local_balance
+            total_imbalance += [local_balance]
             nwinstreaks.append(local_streak_count[0])
             nlosestreaks.append(local_streak_count[1])
         # printing results
-        print("Average model_balance is " + str(round(total_imbalance / 1000., 1)))
-        print("riot_sd for win streaks is " + str(get_sd(nwinstreaks, n_lobbies)))
-        print("riot_sd for lose streaks is " + str(get_sd(nlosestreaks, n_lobbies)))
+        print("\nAverage Model balance is " + str(round(sum(total_imbalance) / 1000., 1)))
+        print("Model SD for balance is " + str(get_sd(total_imbalance)))
+        print("Model SD for win streaks is " + str(get_sd(nwinstreaks)))
+        print("Model SD for lose streaks is " + str(get_sd(nlosestreaks)))
 
 
 def create_db_file():
@@ -155,7 +148,8 @@ def create_db_file():
         pickle.dump(save, file)
 
 
-def get_sd(values, n):
+def get_sd(values):
+    n = len(values)
     res = 0.
     av = sum(values) / float(n)
     for r in values:

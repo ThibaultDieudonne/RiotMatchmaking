@@ -3,7 +3,7 @@ import asyncio
 
 
 api_key = "YOUR API KEY"
-LOGS = False  # turn to True in case nothing is shown for more than 2 minutes
+LOGS = True  # turn to True in case nothing is shown for more than 2 minutes
 server = "euw1"  # don't touch
 
 
@@ -59,4 +59,3 @@ def get_outcome(accountid, game):
     for part in range(10):
         if game['participantIdentities'][part]['player']['accountId'] == accountid:
             return game['participants'][part]['stats']['win']
-
