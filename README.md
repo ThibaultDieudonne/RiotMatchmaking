@@ -27,7 +27,7 @@ We needed a metric to quantify how imbalanced a particular game is, considering 
 
 Let b be a binary parameter in {0, 1}.
 
-For any game G and any binary parameter b, we define B(G, b) = B(b), as the number of winning/losing players in the game G.
+For any game G and any binary parameter b, we define B(G, b) = B(b), as the number of winning/losing players in game G.
 
 We define a team t as set of players with five or less items (since we don't account for neutral players when using the first parameter described in "# Parameters description" section).
 
@@ -37,7 +37,7 @@ In a balanced game from b perspective we ideally expect to have the same amount 
 
 Now consider the function f1(b, i) = |B(b) - 2 * B(t(i), b)|
 
-It gives us twice the difference between the expected amount of b in team t(i) if the game was balanced.
+It gives us twice the difference between the expected B(t, b) if the game was balanced and the actual amount of B(t, b).
 
 As the differences are symetrical this function also gives the sum for both teams. Furthermore it allows us to only work with integers.
 
@@ -67,13 +67,13 @@ We run a large number of iterations of our model, proceeding as described in 1).
 
 3) Comparating values
 
-For both our parameters we compute the standard deviation for the B(b) values stored.
+For both our parameters we compute the standard deviation for the B(b) values stored (riot_sd and model_sd for both winning and losing players).
 
 It is important to check if the whole games are imbalanced because it would produce biased results for team making analysis.
 
 We expect riot_sd and model_sd values to be the same, because separating winning and losing players shouldn't have a strong impact on game result.
 
-Then, we compare standard deviations for m(G) values. It is also important, because some games could be rigged in the opposite way as expected to compensate for the average values.
+Then, we compare standard deviations for m(G) values (riot_balance and model_balance). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average values.
 
 Finally, we compare average values on both samples for our two parameters.
 
