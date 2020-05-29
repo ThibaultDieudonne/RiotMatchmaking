@@ -67,17 +67,19 @@ We run a large number of iterations of our model, proceeding as described in 1).
 
 3) Comparating values
 
-For both our parameters we compute the standard deviation for the B(b) values stored (riot_streak_sd, riot_winrate_sd, model_streak_sd, model_winrate_sd).
+For both our parameters we compute the standard deviation for the B(b) values stored (riot_game_streak_sd, riot_game_winrate_sd, model_game_streak_sd, model_game_winrate_sd).
 
 It is important to check if the whole games are imbalanced because it would produce biased results for team making analysis.
 
-We expect riot_sd and model_sd values to be the same, because separating winning and losing players shouldn't have a strong impact on game result. 
+We expect riot_sd and model_sd values to be the same, because separating winning and losing players shouldn't have a strong impact on game result.
 
-Then, we compare average values on both sample for our two parameters (riot_streak_balance vs model_streak_balance, and riot_winrate_balance vs model_winrate_balance).
+Then, we compare standard deviations for m(G) values (riot_team_streak_sd, riot_team_winrate_sd, model_team_streak_sd, model_team_winrate_sd). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average values.
+
+Finally, we compare average values on both samples for our two parameters (riot_streak_balance vs model_streak_balance, and riot_winrate_balance vs model_winrate_balance).
 
 # Interpretations
 
-To compare balance values we consider what a big imbalance would have been to make unbiased interpretations.
+We consider what a big imbalance would have been to make unbiased interpretations.
 
 Following interpretations are the same for both parameters:
 
