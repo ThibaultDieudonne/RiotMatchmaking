@@ -2,8 +2,8 @@ from pantheon import pantheon
 import asyncio
 
 
-api_key = "YOUR API KEY"
-LOGS = True  # turn to True in case nothing is shown for more than 2 minutes
+api_key = "RGAPI-88235c11-26d3-4d65-97af-13c350667499"
+LOGS = False  # turn to True in case nothing is shown for more than 2 minutes
 server = "euw1"  # don't touch
 
 
