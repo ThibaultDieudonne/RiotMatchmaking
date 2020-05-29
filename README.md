@@ -4,47 +4,89 @@
 
 It's been a while a lot of League of Legends streamers claim matchmaking is rigged. Part of complaining players are convinced matchmaking algorithm imbalances games on purpose, in order to maximize their play time.
 
-It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous results: players losing several games in a row are likely to lower their play time in a near future, while players winning several games in a row are not that likely to increase their play time as much. Moreover, playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors make overall money spending grow). So their might be a capital gain trying to avoid long lose streaks.
+It would theoretically be possible, because the probability for a player to start a new game is correlated to his previous results: players losing several games in a row are likely to lower their play time in a near future, while players winning several games in a row are not likely to increase their play time as much. Moreover, playtime is strongly correlated with the money Riot earn (more overall playtime leads to higher game popularity, and both these factors make overall money spending grow). So their might be a capital gain trying to avoid long lose streaks.
 
-From an entertaining view, it would be pretty bad for League of Legends if the quality of the games and/or the team compositions were purposely imbalanced.
+From an entertaining view, it would be pretty bad for League of Legends if the player realised games quality and/or team compositions were purposely imbalanced. The more players are doing good, the more likely they are to play with players doing bad (with all the tilt issues that comes with).
 
 This program goal is to get a statistical certainty on this question, by analysing game data to determine whether or not the algorithm is streak dependant (as games MMR are obviously not imbalanced).
 We will study both game composition (standard deviation for average amount of win/lose streak players per game) and teams composition (average team balance).
 
+# Parameters description
+
+We define streaks as follow: if last two games were wins/loses, the player is considered in win/lose streak, otherwise he's neutral. We neglect neutral players in our analysis sinced we are only concerned about tendancies on players in win/lose streak. A missing game history will make the corresponding player neutral, since it shouldn't bias our results, but if the program fails to recover more than two game histories, the current game is skipped to avoid having poor resulting data).
+
+Note this streak parameter is unbiased: if matchmaking algorithm is considering streaks over a bigger game history, we may necessarily see some repercussions by only observing the last two games. If matchmaking algorithm was considering other parameters, they may have repercussions on winrate, so on streaks (as a player with winrate > 0.5 wins two games in a row with a probability p > 1/4).
+
+However if Riot is using the biggest game history possible (i.e. season winrate) the game sample needed to see repercussions on the last two games may not be computable in a reasonable time (see time restrictions on "# How to run" section).
+
+We define winrate as a binary parameter representing either a losing player (season winrate < 0.5) or a winning player (season winrate >= 0.5).
+
+# Metric description
+
+We needed a metric to quantify how imbalanced a particular game is, considering one binary parameter for each player in a game.
+
+Let b be a binary parameter in {0, 1}.
+
+For any game G and any binary parameter b, we define B(G, b) = B(b), as the number of winning/losing players in the game G.
+
+We define a team t as set of players with five or less items (since we don't account for neutral players when using the first parameter described in "# Parameters description" section).
+
+Let t(G, i) = t(i), i in {0, 1} be the two teams in game G, and B(t, b) be the number of winning/losing players in the team t.
+
+In a balanced game from b perspective we ideally expect to have the same amount of winning/losing players in each team.
+
+Now consider the function f1(b, i) = |B(b) - 2 * B(t(i), b)|
+
+It gives us twice the difference between the expected amount of b in team t(i) if the game was balanced.
+
+As the differences are symetrical this function also gives the sum for both teams. Furthermore it allows us to only work with integers.
+
+This expression remains biased because if B(b) is an odd value then f1 will return a strictly positive value. Since we want our metric minimum being zero for every scenario, we have to remove bias from f1.
+
+It leads us to function f2(b, i) = f1(b, i) - (B(b) % 2)
+
+We finally have our metric m: m(G) = sum(f2(b, i)), for arbitrary i and every b.
+
 # Process
 
-We define streaks as follow: if last two games were wins/loses, the player is considered in win/lose streak, otherwise he's neutral (a missing data for a player will make him neutral since it doesn't bias our results, but if a game lacks more than 2 players' data, it is just skipped).
+1) Observing game sample
 
-Note this whole metric is unbiased: if matchmaking algorithm is considering streaks over a bigger game history, we may necessarily see some repercussions by only observing last two games. If matchmaking algorithm was considering other parameters than streaks it may also have repercussions on it. 
+As we observe a game we proceed as follow for both our parameters:
 
-As we observe a game we get every player's current streak (previous two games results).
+- Get b for every player in the game
 
-To make effective interpretations, we implemented a streak-independant team making algorithm. Previous games results are sampled with frequencies calculated from the real games sample.
+- Compute and store m(G)
 
-We keep track of each game results separately in order to compute their standard deviation (riot_sd). Then we compare with the same standard deviations for our own streak independant model (model_sd).
+- Store B(b) values
 
-We also compute a "riot_balance" value, proportionnal to team balance from a streak perspective.
+2) Creating reference sample
 
-We compare riot_balance average for a large game sample with the same "streak balance" concept applied to our model (model_balance).
+To make effective interpretations, we implemented a streak-independant team making algorithm. Parameters are sampled with the probability distribution of the real games sample.
 
-# Interpretations
+We run a large number of iterations of our model, proceeding as described in 1).
 
-1) Standard deviations
+3) Comparating values
+
+For both our parameters we compute the standard deviation for the B(b) values stored (riot_streak_sd, riot_winrate_sd, model_streak_sd, model_winrate_sd).
 
 It is important to check if the whole games are imbalanced because it would produce biased results for team making analysis.
 
-We expect riot_sd and model_sd values to be close because we can't imagine a capital gain by filling games according to recent games results.
+We expect riot_sd and model_sd values to be the same, because separating winning and losing players shouldn't have a strong impact on game result. 
 
-2) Balance values
+Then, we compare average values on both sample for our two parameters (riot_streak_balance vs model_streak_balance, and riot_winrate_balance vs model_winrate_balance).
+
+# Interpretations
 
 To compare balance values we consider what a big imbalance would have been to make unbiased interpretations.
 
-If riot_balance is much greater than model_balance: team making is streak dependant. Win streak players are more likely to play in the same team, and against lose streak players (and reciprocally).
+Following interpretations are the same for both parameters:
+
+If riot_balance is much greater than model_balance: team making is rigged. Winning players are more likely to play in the same team, and against losing players (and reciprocally).
 We don't expect to see this result since it would produce the opposite effect to the one described in abstract.
 
-If riot_balance is close to model_balance: team making is not streak dependant. Complaining players would have been misled because of human brain variance perception.
+If riot_balance is equal to model_balance: team making is not streak dependant. Complaining players would have been misled because of human brain variance perception, or maybe Riot wants particular players to have mental breakdown (hey Sard).
 
-If riot_balance is much lower than model_balance: team making is streak dependant and balances winning and losing players over teams. Win streak players are more likely to play with lose streak players.
+If riot_balance is much lower than model_balance: team making is rigged and balances winning and losing players over teams. Winning players are more likely to play with losing players.
 This is the result complaining players can expect.
 
 # Results
@@ -52,7 +94,7 @@ This is the result complaining players can expect.
 In practice a balanced game returns a value of 0, and a strongly imbalanced game produces a value greater than 4.
 
 For the firsts 200 games (relatively small sample, even if it already took more than 6 hours to compute), standards deviations are relatively close (1.6/1.4 for win streaks, 1.5/1.3 for lose streaks).
-Average riot_balance is 2.6 while average model_balance is 2.9. With a 95% confidence interval, Riot team making is streak independant.
+Average riot_balance is 2.6 while average model_balance is 2.9. It is likely that Riot matchmaking is streak independant. 
 
 1000 games to be published.
 
@@ -73,6 +115,7 @@ To fill the current database or create a fresh one (by deleting db.dat file):
 The program will update the database with an ITERATIONS (in "analysis.py") number of games at each run. The very low speed issue is dued to riot API not making it easy to look for game histories before a particular game, and high limitation of requests per minute.
 
 When creating a fresh database it is strongly recommended to update INITIAL_GAME_ID in "analysis.py" with the "Last game id" value shown by stats.py (updated each time database is filled).
+
 
 
 
