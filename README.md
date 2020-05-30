@@ -18,7 +18,7 @@ If the matchmaking system was rigged, there would be no way to know which compon
 
 This program goal is to get a statistical certainty, by analysing game data to make an unbiased conclusion.
 
-We will study both games composition (standard deviation for average amount of good/bad performing players per game) and teams composition (average team balance).
+We will study games composition (standard deviation for average amount of good/bad performing players per game) and teams composition (average team balance).
 
 # Metric description
 
@@ -28,7 +28,7 @@ Let b be a binary parameter in {0, 1}.
 
 For any game G and any binary parameter b, we define B(G, b) = B(b), as the number of good/bad performing players in game G.
 
-We define a team t as set of players with five or less items (since we don't account for neutral players when using the first parameter described in "Parameters description" section).
+We define a team t as set of players with five or less items (since we don't account for neutral players when using the first parameter described in the "Parameters description" section).
 
 Let t(G, i) = t(i), i in {0, 1} be the two teams in game G, and B(t, b) be the number of good/bad performing players in the team t.
 
@@ -52,7 +52,7 @@ We define streaks as follow: if last two games were wins/loses, the player is co
 
 Note this streak parameter is unbiased: if a rigged algorithm was considering streaks over a bigger game history, we may necessarily see some repercussions by only observing the last two games. If a rigged algorithm was considering other parameters, they may have repercussions on winrate, so on results at any time scale (as a player with winrate > 0.5 will win two games in a row with a probability p > 1/4).
 
-However if Riot is using the biggest game history possible (i.e. season winrate) the game sample needed to see repercussions on the last two games may be very long to compute (see time restrictions on "How to run" section).
+However if Riot is using the biggest game history possible (i.e. season winrate) the game sample needed to see repercussions on the last two games may be very long to compute (see time restrictions in the "How to run" section).
 
 To over come this issue, we could define winrate as a binary parameter representing either a losing player (season winrate < 0.5) or a winning player (season winrate >= 0.5). Note this parameter has not been implemented because of how hard Riot API made it to get player's winrates (only way of doing so is to keep a a local database with every ranked game played this season, or do web scrapping on a similar service). Anyway, the following content describe how we would have managed it.
 
@@ -60,7 +60,7 @@ To over come this issue, we could define winrate as a binary parameter represent
 
 1) Observing game sample
 
-As we observe a game we proceed as follow for both our parameters:
+As we observe a game we proceed as follow for every parameter:
 
 - Get b for every player in the game
 
@@ -76,21 +76,19 @@ We run a large number of iterations of our model, proceeding as described in 1).
 
 3) Comparating values
 
-For both our parameters we compute the standard deviation for the B(b) values stored (riot_sd and model_sd for both good/bad performing players).
+For every parameter we compute the standard deviation for the B(b) values stored (riot_sd and model_sd for both good/bad performing players).
 
 It is important to check if the whole games are imbalanced because it would produce biased results for team making analysis.
 
-We expect riot_sd and model_sd values to be the same, because separating good and bad performing players shouldn't have a strong impact on game result.
+We expect riot_sd and model_sd values to be the same, because separating good and bad performing players shouldn't have a strong impact on game results.
 
-Then, we compare standard deviations for balance_value(G) values (riot_balance and model_balance). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average values.
+Then, we compare standard deviations for balance_value's (riot_balance and model_balance). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average balance.
 
-Finally, we compare average values on both samples for our two parameters.
+Finally, we compare average balance_values on both samples for every parameter.
 
 # Interpretations
 
 We consider what a big imbalance would have been to make unbiased interpretations.
-
-Following interpretations are the same for both parameters:
 
 If riot_balance is much greater than model_balance: team making is rigged. Good performing players are more likely to play in the same team, and against bad performing players (and reciprocally).
 We don't expect to see this result since it would produce the opposite effect to the one described in abstract.
@@ -102,7 +100,7 @@ This is the result complaining players can expect.
 
 # Results
 
-As mentioned in "Parameters desciption" section, the results presented only concern the streak parameter.
+As mentioned in the "Parameters desciption" section, the results presented only concern the streak parameter.
 
 In practice a balanced game produces a balance_value of 0, and a strongly imbalanced game produces a balance_value greater than 4.
 
