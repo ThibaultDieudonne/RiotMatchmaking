@@ -126,11 +126,8 @@ class MM:
                         team_streak_count[2 * tm + strk] += 1
             local_balance = 0
             # computing game balance
-            for dat in range(4):
-                local_balance += abs(team_streak_count[dat] - local_streak_count[dat % 2])
-            # removing bias
-            bias = 2 * (local_streak_count[0] % 2 + local_streak_count[1] % 2)
-            local_balance -= bias
+            for dat in range(2):
+                local_balance += abs(2 * team_streak_count[dat] - local_streak_count[dat]) - local_streak_count[dat] % 2
             # updating data
             total_imbalance += [local_balance]
             nwinstreaks.append(local_streak_count[0])

@@ -54,7 +54,7 @@ Note this streak parameter is unbiased: if a rigged algorithm was considering st
 
 However if Riot is using the biggest game history possible (i.e. season winrate) the game sample needed to see repercussions on the last two games may be very long to compute (see time restrictions in the "How to run" section).
 
-To over come this issue, we could define winrate as a binary parameter representing either a losing player (season winrate < 0.5) or a winning player (season winrate >= 0.5). Note this parameter has not been implemented because of how hard Riot API made it to get player's winrates (only way of doing so is to keep a a local database with every ranked game played this season, or do web scrapping on a similar service). Anyway, the following content describe how we would have managed it.
+To overcome this issue, we could define winrate as a binary parameter representing either a losing player (season winrate < 0.5) or a winning player (season winrate >= 0.5). Note this parameter has not been implemented because of how hard Riot API made it to get player's winrates (only way of doing so is to keep a local database with every ranked game played this season, or do web scrapping on a similar service). Anyway, the following content describe how we would have managed it.
 
 # Process
 
@@ -83,6 +83,8 @@ It is important to check if the whole games are imbalanced because it would prod
 We expect riot_sd and model_sd values to be the same, because separating good and bad performing players shouldn't have a strong impact on game results.
 
 Then, we compare standard deviations for balance_value's (riot_balance and model_balance). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average balance.
+
+Note we compare standard deviations with equal size samples. By generating samples of various sizes, we determine the minimum sample size needed for typical confidence interval.
 
 Finally, we compare average balance_value's on both samples for every parameter.
 
@@ -113,7 +115,7 @@ Average riot_balance is 2.6 while average model_balance is 2.9. It is likely tha
 
 Get a python3 distribution.
 
-To see database statistics: run "python3 -m stats.py".
+To see database statistics: run "python3 -m stats".
 
 To fill the current database or create a fresh one (by deleting db.dat file):
 
@@ -121,7 +123,7 @@ To fill the current database or create a fresh one (by deleting db.dat file):
 
 - fill your own Riot API key into "api_binder.py".
 
-- run script with "python3 -m analysis.py".
+- run script with "python3 -m analysis".
 
 The program will update the database with an ITERATIONS (in "analysis.py") number of games at each run. The very low speed issue is dued to riot API not making it easy to look for game histories before a particular game, and high limitation of requests per minute.
 
