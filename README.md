@@ -84,7 +84,7 @@ We expect riot_sd and model_sd values to be the same, because separating good an
 
 Then, we compare standard deviations for balance_value's (riot_balance and model_balance). It is also important, because some games could be rigged in the opposite way as expected to compensate for the average balance.
 
-Finally, we compare average balance_values on both samples for every parameter.
+Finally, we compare average balance_value's on both samples for every parameter.
 
 # Interpretations
 
