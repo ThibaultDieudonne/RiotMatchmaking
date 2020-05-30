@@ -12,7 +12,7 @@ There might be an interest for Riot to do so, because the probability for a play
 
 Moreover, playtime is strongly correlated with the money Riot earns (more overall playtime leads to higher game popularity, and both these factors make overall money spending grow). So there might be a capital gain for Riot to try to avoid long lose streaks and very low season winrates.
 
-From an entertaining view, it would be pretty bad for League of Legends if the player realised games quality and/or team compositions were purposely imbalanced. The more a player would be doing good, the more likely he would be to play with players doing bad (with all the tilt issues that comes with).
+From an entertaining view, it would be pretty bad for League of Legends if the players realised that games quality and/or team compositions were purposely imbalanced. The more a player would be doing good, the more likely he would be to play with players doing bad (with all the tilt issues that comes with).
 
 If the matchmaking system was rigged, there would be no way to know which component is responsible. It could be either MMR calculator offering compensations to players with bad results, or team making algorithm imbalancing games on purpose.
 
